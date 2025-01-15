@@ -1,0 +1,166 @@
+---
+title: "Using R's C Functions in Stan Models"
+author: "Andrew Johnson"
+date: "2024-07-31"
+format:
+  html:
+    embed-resources: true
+---
+
+
+## Motivation
+
+The R programming language provides robust, precise, and efficient implementations of many mathematical functions and distributions. While these can be used in Stan models by [interfacing with an R session](https://users.aalto.fi/~johnsoa2/notebooks/r_in_stan.html), this involves significant overhead and can result in slow sampling.
+
+Given that a majority of R's core functions and distributions are implemented in C, we can use Stan's external C++ framework to call them directly, avoiding the need and overhead of an R session entirely.
+
+
+## R Function: Quantile Functions - log inputs
+
+When evaluating quantile functions we often prefer to provide the input probability on the log-scale to avoid numerical issues with under- or overflow. For the present example, we will use R's `qnorm()` and `qt()` functions to calculate the quantile function for a standard-normal distribution and a standard student-t distribution where the input probability is provided on the log scale:
+
+
+The R signature for the `qnorm()` function is:
+
+```{r, eval=FALSE}
+qnorm(p, mean, sd, lower.tail, log.p)
+```
+
+
+Which maps directly to the [underlying C implementation](https://github.com/r-devel/r-svn/blob/83873fe7c1e3e23ef1ff4a986954bf1c8f01ce1d/src/include/Rmath.h0.in#L375):
+
+```{c, eval=FALSE}
+double	qnorm(double, double, double, int, int);
+```
+
+### Gradients
+
+We will also need to calculate gradients for inputs if we are aiming to use the function with `parameters` in a Stan model. The gradients for quantile function, with respect to the probability parameter, are given by the reciprocal of the density, and the adjustment for inputs on the log-scale are easily given by the chain rule:
+
+$$
+\frac{\text{d}}{\text{d}p}F^{-1}(e^p) \\
+= \frac{\text{d}}{\text{d}x}F^{-1}(x) \cdot \frac{\text{d}}{\text{d}p}e^p \\
+= \frac{e^p}{f(F^{-1}(e^p))}
+$$
+
+This means that we can also use R's corresponding density functions, `dnorm()` and `dt()`, to define the gradients
+
+### Stan - External C++
+
+To use the density and quantile functions in our external C++, we simply include R's math header and then define our functions as usual:
+
+```{r}
+header_code <- "
+  #include <stan/math.hpp>
+  #include <Rmath.h>
+  
+  double qnorm_logp(double p, std::ostream* pstream__) {
+    return qnorm(p, 0, 1, 1, 1);
+  }
+  
+  double qt_logp(double p, double df, std::ostream* pstream__) {
+    return qt(p, df, 1, 1);
+  }
+  
+  stan::math::var qt_logp(stan::math::var p, double df, std::ostream* pstream__) {
+    return stan::math::make_callback_var(
+      qt_logp(p.val(), df, pstream__),
+      [p, df](auto& vi) mutable {
+        // Calculate gradient on log-scale for numerical stability
+        p.adj() += vi.adj() * exp(p.val() - dt(vi.val(), df, 1));
+      }
+    );
+  }
+  
+  stan::math::var qnorm_logp(stan::math::var p, std::ostream* pstream__) {
+    return stan::math::make_callback_var(
+      qnorm_logp(p.val(), pstream__),
+      [p](auto& vi) mutable {
+        // Calculate gradient on log-scale for numerical stability
+        p.adj() += vi.adj() * exp(p.val() - dnorm(vi.val(), 0, 1, 1));
+      }
+    );
+  }
+"
+
+user_hpp <- tempfile(fileext = ".hpp")
+writeLines(header_code, con = user_hpp)
+```
+
+### Stan - Stan Model
+
+We will use the following (nonsensical) Stan model to test the values and gradients of the implementation:
+
+```{r}
+stan_code <- "
+  functions {
+    real qnorm_logp(real logp);
+    real qt_logp(real logp, data real df);
+  }
+  
+  data {
+    int use_normal;
+  }
+  
+  parameters {
+    real<upper=0> log_p;
+  }
+  
+  transformed parameters {
+    real qnorm_test = qnorm_logp(log_p);
+    real qt_test = qt_logp(log_p, 3);
+  }
+  
+  model {
+    target += use_normal ? qnorm_test : qt_test;
+  }
+"
+
+stan_file <- tempfile(fileext = ".stan")
+writeLines(stan_code, con = stan_file)
+```
+
+### Stan - Compilation & Linking
+
+In order for the Stan model to be able to use the C functions from R, we need to provide additional flags to the compilation & linking of the model. Thankfully, R has built-in functions which return these flags:
+
+```{r}
+cpp_options = list(
+  paste0("CPPFLAGS += -I", shQuote(R.home("include"))),
+  paste0("LDLIBS += -L", shQuote(R.home("lib")), " -lR")
+)
+```
+
+We can then pass these directly to `cmdstanr`, along with our model and external C++, for compilation:
+
+```{r}
+mod <- cmdstanr::cmdstan_model(stan_file, 
+                               user_header = user_hpp,
+                               stanc_options = list("allow-undefined"),
+                               cpp_options = cpp_options,
+                               force_recompile = TRUE)
+```
+
+### Stan - Validation
+
+To test our implementation, we can fit the model for a small number of iterations and check that the calculated quantiles are consistent with those returned by `qnorm()` in R directly, which shows that the values match completely.
+
+```{r}
+fit <- mod$sample(data = list(use_normal = 0), chains = 1,
+                      iter_warmup = 50, iter_sampling = 50,
+                      show_messages = FALSE,
+                      show_exceptions = FALSE)
+
+fit$draws(variables = c("log_p", "qnorm_test", "qt_test")) |>
+    posterior::mutate_variables(qnorm_true = qnorm(log_p, log.p=TRUE),
+                                qt_true = qt(log_p, df = 3, log.p=TRUE)) |>
+    posterior::summarise_draws()
+```
+
+Next, to validate the specification of gradients, we can use `cmdstanr`'s `$diagnose()` method to check that our gradient calculations match those from finite-differencing, which also shows a great match:
+
+```{r}
+mod$diagnose(data = list(use_normal = 1))$gradients()
+mod$diagnose(data = list(use_normal = 0))$gradients()
+```
+
