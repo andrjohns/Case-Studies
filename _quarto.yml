@@ -1,0 +1,15 @@
+project:
+  title: "Case Studies"
+  type: website
+
+website:
+  page-navigation: true
+  back-to-top-navigation: true
+  sidebar:
+    style: "docked"
+format:
+  html:
+    page-layout: article
+execute:
+  freeze: auto
+  error: true
