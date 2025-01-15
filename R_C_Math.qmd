@@ -7,6 +7,9 @@ format:
     embed-resources: true
 ---
 
+```{r setup, include=FALSE}
+cmdstanr::register_knitr_engine(override = FALSE)
+```
 
 ## Motivation
 
@@ -49,7 +52,40 @@ This means that we can also use R's corresponding density functions, `dnorm()` a
 
 To use the density and quantile functions in our external C++, we simply include R's math header and then define our functions as usual:
 
-```{r}
+```{cpp, eval=FALSE}
+#include <stan/math.hpp>
+#include <Rmath.h>
+
+double qnorm_logp(double p, std::ostream* pstream__) {
+  return qnorm(p, 0, 1, 1, 1);
+}
+
+double qt_logp(double p, double df, std::ostream* pstream__) {
+  return qt(p, df, 1, 1);
+}
+
+stan::math::var qt_logp(stan::math::var p, double df, std::ostream* pstream__) {
+  return stan::math::make_callback_var(
+    qt_logp(p.val(), df, pstream__),
+    [p, df](auto& vi) mutable {
+      // Calculate gradient on log-scale for numerical stability
+      p.adj() += vi.adj() * exp(p.val() - dt(vi.val(), df, 1));
+    }
+  );
+}
+
+stan::math::var qnorm_logp(stan::math::var p, std::ostream* pstream__) {
+  return stan::math::make_callback_var(
+    qnorm_logp(p.val(), pstream__),
+    [p](auto& vi) mutable {
+      // Calculate gradient on log-scale for numerical stability
+      p.adj() += vi.adj() * exp(p.val() - dnorm(vi.val(), 0, 1, 1));
+    }
+  );
+}
+```
+
+```{r, include=FALSE}
 header_code <- "
   #include <stan/math.hpp>
   #include <Rmath.h>
@@ -82,16 +118,39 @@ header_code <- "
     );
   }
 "
-
 user_hpp <- tempfile(fileext = ".hpp")
 writeLines(header_code, con = user_hpp)
 ```
 
 ### Stan - Stan Model
 
+```{cmdstan, eval=FALSE}
+functions {
+  real qnorm_logp(real logp);
+  real qt_logp(real logp, data real df);
+}
+
+data {
+  int use_normal;
+}
+
+parameters {
+  real<upper=0> log_p;
+}
+
+transformed parameters {
+  real qnorm_test = qnorm_logp(log_p);
+  real qt_test = qt_logp(log_p, 3);
+}
+
+model {
+  target += use_normal ? qnorm_test : qt_test;
+}
+```
+
 We will use the following (nonsensical) Stan model to test the values and gradients of the implementation:
 
-```{r}
+```{r, include=FALSE}
 stan_code <- "
   functions {
     real qnorm_logp(real logp);
@@ -115,7 +174,6 @@ stan_code <- "
     target += use_normal ? qnorm_test : qt_test;
   }
 "
-
 stan_file <- tempfile(fileext = ".stan")
 writeLines(stan_code, con = stan_file)
 ```
