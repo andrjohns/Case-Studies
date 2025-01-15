@@ -52,7 +52,7 @@ This means that we can also use R's corresponding density functions, `dnorm()` a
 
 To use the density and quantile functions in our external C++, we simply include R's math header and then define our functions as usual:
 
-```{cpp, eval=FALSE}
+```{cc, eval=FALSE}
 #include <stan/math.hpp>
 #include <Rmath.h>
 
@@ -124,7 +124,9 @@ writeLines(header_code, con = user_hpp)
 
 ### Stan - Stan Model
 
-```{cmdstan, eval=FALSE}
+We will use the following (nonsensical) Stan model to test the values and gradients of the implementation:
+
+```{cmdstan, output.var="dummy", eval=FALSE}
 functions {
   real qnorm_logp(real logp);
   real qt_logp(real logp, data real df);
@@ -148,7 +150,6 @@ model {
 }
 ```
 
-We will use the following (nonsensical) Stan model to test the values and gradients of the implementation:
 
 ```{r, include=FALSE}
 stan_code <- "
