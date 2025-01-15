@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   render-website:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
