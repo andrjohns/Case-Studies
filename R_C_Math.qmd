@@ -53,15 +53,15 @@ To use the density and quantile functions in our external C++, we simply include
 header_code <- "
   #include <stan/math.hpp>
   #include <Rmath.h>
-  
+
   double qnorm_logp(double p, std::ostream* pstream__) {
     return qnorm(p, 0, 1, 1, 1);
   }
-  
+
   double qt_logp(double p, double df, std::ostream* pstream__) {
     return qt(p, df, 1, 1);
   }
-  
+
   stan::math::var qt_logp(stan::math::var p, double df, std::ostream* pstream__) {
     return stan::math::make_callback_var(
       qt_logp(p.val(), df, pstream__),
@@ -71,7 +71,7 @@ header_code <- "
       }
     );
   }
-  
+
   stan::math::var qnorm_logp(stan::math::var p, std::ostream* pstream__) {
     return stan::math::make_callback_var(
       qnorm_logp(p.val(), pstream__),
@@ -97,20 +97,20 @@ stan_code <- "
     real qnorm_logp(real logp);
     real qt_logp(real logp, data real df);
   }
-  
+
   data {
     int use_normal;
   }
-  
+
   parameters {
     real<upper=0> log_p;
   }
-  
+
   transformed parameters {
     real qnorm_test = qnorm_logp(log_p);
     real qt_test = qt_logp(log_p, 3);
   }
-  
+
   model {
     target += use_normal ? qnorm_test : qt_test;
   }
@@ -125,16 +125,19 @@ writeLines(stan_code, con = stan_file)
 In order for the Stan model to be able to use the C functions from R, we need to provide additional flags to the compilation & linking of the model. Thankfully, R has built-in functions which return these flags:
 
 ```{r}
+# R library stored in different directory on windows
+libdir <- ifelse(.Platform$OS.type == "windows", R.home("bin"), R.home("lib"))
+
 cpp_options = list(
   paste0("CPPFLAGS += -I", shQuote(R.home("include"))),
-  paste0("LDLIBS += -L", shQuote(R.home("lib")), " -lR")
+  paste0("LDLIBS += -L", shQuote(libdir), " -lR")
 )
 ```
 
 We can then pass these directly to `cmdstanr`, along with our model and external C++, for compilation:
 
-```{r}
-mod <- cmdstanr::cmdstan_model(stan_file, 
+```{r, warning=FALSE, message=FALSE, output=FALSE, results=FALSE}
+mod <- cmdstanr::cmdstan_model(stan_file,
                                user_header = user_hpp,
                                stanc_options = list("allow-undefined"),
                                cpp_options = cpp_options,
@@ -163,4 +166,3 @@ Next, to validate the specification of gradients, we can use `cmdstanr`'s `$diag
 mod$diagnose(data = list(use_normal = 1))$gradients()
 mod$diagnose(data = list(use_normal = 0))$gradients()
 ```
-

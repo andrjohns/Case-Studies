@@ -7,7 +7,9 @@ website:
   back-to-top-navigation: true
   sidebar:
     style: "docked"
-    toc: true
+    contents:
+      - section: "Case Studies"
+        contents: "*.qmd"
 format:
   html:
     page-layout: article
