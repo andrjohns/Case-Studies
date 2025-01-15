@@ -43,6 +43,9 @@ jobs:
             any::randcorr
             any::sn
             any::mvtnorm
+            any::Rcpp
+            any::RcppEigen
+            any::RInside
 
       - name: Cache CmdStan
         id: cache-cmdstan

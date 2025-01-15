@@ -12,6 +12,7 @@ website:
         contents: "*.qmd"
 format:
   html:
+    embed-resources: true
     page-layout: article
 execute:
   freeze: auto

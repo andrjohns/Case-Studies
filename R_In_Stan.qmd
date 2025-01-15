@@ -1,0 +1,289 @@
+---
+title: "Using R Functions in Stan Models"
+author: "Andrew Johnson"
+date: "2023-11-28"
+---
+
+```{r setup, include=FALSE}
+cmdstanr::register_knitr_engine(override = FALSE)
+```
+
+## Introduction
+
+A common question/request is for the ability to use R functions and packages as part of a Stan model specification. This requires two components:
+
+  - Calling R functions from C++
+  - Gradients with respect to each function input
+
+While Stan can automatically calculate the gradients for C++ functions if they are implemented using existing functions with gradients, this cannot be extended to R functions. This means that any usage of R-based functions with parameters (i.e., not in the `transformed data` or `generated quantities` blocks) requires that a function for calculating the gradients is also implemented.
+
+This document will provide a worked example for the process of using an R function in a Stan model via external C++.
+
+We will be implementing the log determinant function:
+
+$$
+\log |M|
+$$
+
+Which has gradients:
+
+$$
+\frac{d}{dM} \log |M| = \left(M^{-1}\right)^T
+$$
+
+Note that the log determinant is already available in Stan as the `log_determinant()` function, which we will use to verify that the implementation is correct.
+
+## `RInside`: Calling R from C++
+
+The process of interacting with R from C++ is greatly simplified by the `RInside` R package, which provides the C++ headers for initialising and managing an R session. The data structures that `RInside` uses for passing results between R and C++ are also designed for use with `Rcpp` and `RcppEigen`, which are needed for easy handling of matrix and vector types.
+
+However, a key detail that needs to be emphasised is that an R session can only be initialised *once* for a given program. This means that a single R session and its environment will be used for the entirety of the sampling/estimation process. Consequently, it should be considered best-practice to delete any variables/objects in the R session once they are no longer needed - otherwise you might be re-using objects/values from a previous iteration without realising.
+
+## C++: Working with Arithmetic Types
+
+For simplicity, we’ll first implement the function without gradients (not compatible with parameters):
+
+```{cc, eval=FALSE}
+/**
+ * The Stan headers *must* be included before the Rcpp headers, otherwise
+ * internal definitions for Eigen are ignored
+*/
+#include <stan/math.hpp>
+#include <RInside.h>
+#include <RcppEigen.h>
+
+/**
+ * The RInstance object is declared 'static' so that C++ knows not to delete
+ * the object and invalidate the R session until the program has finished
+*/
+static RInside RInstance;
+
+double r_log_determinant(const Eigen::MatrixXd& m, std::ostream *pstream__) {
+  /**
+   * Passing objects to R is very simple, as the conversion from C++ -> R types
+   * is automatically delegated to Rcpp or similar (e.g., RcppEigen).
+  */
+  RInstance["m_val"] = m;
+
+  /**
+   * Interacting with the R session is primarily through string commands.
+   *   - The `parseEval()` method is for commands which will return an object
+   *   - The `parseEvalQ()` method is for commands with no return value/object
+   *
+   * Rcpp again handles the process of converting the returned R object to the
+   * desired C++ type. You can allow this to be handled automatically, or you
+   * can wrap the call in `Rcpp::as<T>()` where `T` is the desired C++ type.
+  */
+  double log_det_val = RInstance.parseEval("determinant(m_val, logarithm = TRUE)$modulus");
+
+  /**
+   * Make sure to clean-up the R environment before returning!
+  */
+  RInstance.parseEvalQ("rm(m_val)");
+
+  return log_det_val;
+}
+```
+
+As can be seen above, there is remarkably little extra code needed when passing data and results between R & C++.
+
+## C++: Working with Autodiff Types (Parameters)
+
+Next we can add the function definition for use with parameters.
+
+```{cc, eval=FALSE}
+stan::math::var r_log_determinant(const Eigen::Matrix<stan::math::var, -1, -1>& m,
+                                  std::ostream *pstream__) {
+  using stan::arena_t;
+  using stan::math::var;
+  using stan::math::value_of;
+
+  /**
+   * The parameters are moved into Stan's memory arena so that their gradients
+   * can be updated lated
+  */
+  arena_t<Eigen::Matrix<var, -1, -1>> arena_m = m;
+
+  /**
+   * The R process is exactly the same as the non-parameter version, just with
+   * the addition of calculating the gradients for the input 'm'
+  */
+  RInstance["m_val"] = stan::math::value_of(arena_m);
+  double log_det_val = RInstance.parseEval("determinant(m_val, logarithm = TRUE)$modulus");
+  Eigen::MatrixXd log_det_grad = RInstance.parseEval("t(solve(m_val))");
+  RInstance.parseEvalQ("rm(m_val)");
+
+  /**
+   * Also move the calculated gradients into the memory arena so we can access
+   * them later
+  */
+  arena_t<Eigen::MatrixXd> log_det_grad_arena = log_det_grad;
+
+  /**
+   * Initialise a new parameter with the calculated value, and specify how the
+   * gradients for the inputs should be updated later.
+  */
+  var log_det = log_det_val;
+  stan::math::reverse_pass_callback([arena_m, log_det, log_det_grad_arena]() mutable {
+    arena_m.adj() += log_det.adj() * log_det_grad_arena;
+  });
+  return log_det;
+}
+```
+
+```{r, include=FALSE}
+header_code <- '
+#include <stan/math.hpp>
+#include <RInside.h>
+#include <RcppEigen.h>
+
+static RInside RInstance;
+
+double r_log_determinant(const Eigen::MatrixXd& m, std::ostream *pstream__) {
+  RInstance["m_val"] = m;
+  double log_det_val = RInstance.parseEval("determinant(m_val, logarithm = TRUE)$modulus");
+  RInstance.parseEvalQ("rm(m_val)");
+  return log_det_val;
+}
+
+stan::math::var r_log_determinant(const Eigen::Matrix<stan::math::var, -1, -1>& m,
+                                  std::ostream *pstream__) {
+  using stan::arena_t;
+  using stan::math::var;
+  using stan::math::value_of;
+  arena_t<Eigen::Matrix<var, -1, -1>> arena_m = m;
+
+  RInstance["m_val"] = stan::math::value_of(arena_m);
+  double log_det_val = RInstance.parseEval("determinant(m_val, logarithm = TRUE)$modulus");
+  Eigen::MatrixXd log_det_grad = RInstance.parseEval("t(solve(m_val))");
+  RInstance.parseEvalQ("rm(m_val)");
+  arena_t<Eigen::MatrixXd> log_det_grad_arena = log_det_grad;
+  var log_det = log_det_val;
+  stan::math::reverse_pass_callback([arena_m, log_det, log_det_grad_arena]() mutable {
+    arena_m.adj() += log_det.adj() * log_det_grad_arena;
+  });
+  return log_det;
+}
+'
+user_hpp <- tempfile(fileext = ".hpp")
+writeLines(header_code, con = user_hpp)
+```
+
+## Stan
+
+### Model
+
+To test that the R-implemented log_determinant() returns the same values and gradients as the built-in Stan function, we will use the following (nonsensical) model:
+
+```{cmdstan, output.var="dummy", eval=FALSE}
+functions {
+  real r_log_determinant(matrix x);
+}
+data {
+  int<lower=0> N;
+  array[N] int<lower=0,upper=1> y;
+  int use_r;
+}
+parameters {
+  matrix[2, 2] matrix_par;
+}
+transformed parameters {
+  real log_det;
+  log_det = use_r ? r_log_determinant(matrix_par) : log_determinant(matrix_par);
+}
+model {
+  y ~ bernoulli_logit(log_det);
+}
+```
+
+```{r, include=FALSE}
+stan_code <- "
+  functions {
+    real r_log_determinant(matrix x);
+  }
+  data {
+    int<lower=0> N;
+    array[N] int<lower=0,upper=1> y;
+    int use_r;
+  }
+  parameters {
+    matrix[2, 2] matrix_par;
+  }
+  transformed parameters {
+    real log_det;
+    log_det = use_r ? r_log_determinant(matrix_par) : log_determinant(matrix_par);
+  }
+  model {
+    y ~ bernoulli_logit(log_det);
+  }
+"
+stan_file <- tempfile(fileext = ".stan")
+writeLines(stan_code, con = stan_file)
+```
+
+### Compilation
+
+To use this external C++ with Stan, we need to provide the additional compilation & linker flags for compiling against R, `RInside`, `Rcpp`, and `RcppEigen`. Both R and these packages provide methods for extracting these flags:
+
+```{r}
+r_bin <- file.path(R.home("bin"), "R")
+
+extra_cxxflags <- c(
+  system2(r_bin, c("CMD", "config", "--cppflags"), stdout = TRUE),
+  Rcpp:::RcppCxxFlags(),
+  RcppEigen:::RcppEigenCxxFlags(),
+  RInside:::RInsideCxxFlags()
+)
+
+extra_ldlibs <- c(
+  system2(r_bin, c("CMD", "config", "--ldflags"), stdout = TRUE),
+  RInside:::RInsideLdFlags()
+)
+
+cpp_options <- list(
+  paste0(c("CXXFLAGS +=", extra_cxxflags), collapse = " "),
+  paste0(c("LDLIBS +=", extra_ldlibs), collapse = " ")
+)
+```
+
+These will then be used to compile the model and external functions:
+
+```{r, warning=FALSE, message=FALSE, output=FALSE, results=FALSE}
+mod <- cmdstanr::cmdstan_model(stan_file,
+                               user_header = user_hpp,
+                               stanc_options = list("allow-undefined"),
+                               cpp_options = cpp_options,
+                               force_recompile = TRUE)
+```
+
+### Evaluation
+
+To check our implementation, we’ll use the `$diagnose()` method to calculate the initial values and gradients for a model, and compare the results between the built-in `log_determinant()` and our implementation.
+
+```{r}
+data <- list(N = 10, y = c(0,1,0,0,0,0,0,0,0,1), use_r = 0)
+```
+
+The built-in returns:
+
+```{r}
+r_model$diagnose(data = data, seed = 2023)$gradients()
+```
+
+And our implementation:
+
+```{r}
+data$use_r <- 1
+r_model$diagnose(data = data, seed = 2023)$gradients()
+```
+
+All looks good!
+
+## Using R Functions without Analytic Gradients
+
+In some cases, the analytic gradients for a given function might not always be known or easy to calculate. As a less-efficient alternative the gradients for a given function could also be computed numerically in R. For example, we could have calculated the gradients for our function using the `numDeriv::grad()` function:
+
+```{cc, eval=FALSE}
+RInstance.parseEvalQ("detfun <- function(x) { determinant(x, logarithm = TRUE)$modulus }");
+Eigen::MatrixXd log_det_grad = RInstance.parseEval("matrix(numDeriv::grad(detfun, m_val), nrow=nrow(m_val))");
+```
