@@ -192,7 +192,7 @@ cpp_options = list(
 
 We can then pass these directly to `cmdstanr`, along with our model and external C++, for compilation:
 
-```{r, warning=FALSE, message=FALSE, output=FALSE, results=FALSE}
+```{r}
 mod <- cmdstanr::cmdstan_model(stan_file,
                                user_header = user_hpp,
                                stanc_options = list("allow-undefined"),

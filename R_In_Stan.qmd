@@ -229,14 +229,14 @@ To use this external C++ with Stan, we need to provide the additional compilatio
 r_bin <- file.path(R.home("bin"), "R")
 
 extra_cxxflags <- c(
-  system2(r_bin, c("CMD", "config", "--cppflags"), stdout = TRUE),
+  paste0("CPPFLAGS += -I", shQuote(R.home("include"))),
   Rcpp:::RcppCxxFlags(),
   RcppEigen:::RcppEigenCxxFlags(),
   RInside:::RInsideCxxFlags()
 )
 
 extra_ldlibs <- c(
-  system2(r_bin, c("CMD", "config", "--ldflags"), stdout = TRUE),
+  paste0("LDLIBS += -L", shQuote(libdir), " -lR"),
   RInside:::RInsideLdFlags()
 )
 
@@ -248,7 +248,7 @@ cpp_options <- list(
 
 These will then be used to compile the model and external functions:
 
-```{r, warning=FALSE, message=FALSE, output=FALSE, results=FALSE}
+```{r}
 mod <- cmdstanr::cmdstan_model(stan_file,
                                user_header = user_hpp,
                                stanc_options = list("allow-undefined"),
