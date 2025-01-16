@@ -5130,31 +5130,36 @@ window.Quarto = {
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>r_bin <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="fu">R.home</span>(<span class="st">&quot;bin&quot;</span>), <span class="st">&quot;R&quot;</span>)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>extra_cxxflags <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">system2</span>(r_bin, <span class="fu">c</span>(<span class="st">&quot;CMD&quot;</span>, <span class="st">&quot;config&quot;</span>, <span class="st">&quot;--cppflags&quot;</span>), <span class="at">stdout =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="st">&quot;CPPFLAGS += -I&quot;</span>, <span class="fu">shQuote</span>(<span class="fu">R.home</span>(<span class="st">&quot;include&quot;</span>))),</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  Rcpp<span class="sc">:::</span><span class="fu">RcppCxxFlags</span>(),</span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  RcppEigen<span class="sc">:::</span><span class="fu">RcppEigenCxxFlags</span>(),</span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  RInside<span class="sc">:::</span><span class="fu">RInsideCxxFlags</span>()</span>
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>extra_ldlibs <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">system2</span>(r_bin, <span class="fu">c</span>(<span class="st">&quot;CMD&quot;</span>, <span class="st">&quot;config&quot;</span>, <span class="st">&quot;--ldflags&quot;</span>), <span class="at">stdout =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="st">&quot;LDLIBS += -L&quot;</span>, <span class="fu">shQuote</span>(libdir), <span class="st">&quot; -lR&quot;</span>),</span>
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  RInside<span class="sc">:::</span><span class="fu">RInsideLdFlags</span>()</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>cpp_options <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="fu">c</span>(<span class="st">&quot;CXXFLAGS +=&quot;</span>, extra_cxxflags), <span class="at">collapse =</span> <span class="st">&quot; &quot;</span>),</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="fu">c</span>(<span class="st">&quot;LDLIBS +=&quot;</span>, extra_ldlibs), <span class="at">collapse =</span> <span class="st">&quot; &quot;</span>)</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error: object &#39;libdir&#39; not found</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cpp_options <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="fu">c</span>(<span class="st">&quot;CXXFLAGS +=&quot;</span>, extra_cxxflags), <span class="at">collapse =</span> <span class="st">&quot; &quot;</span>),</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="fu">c</span>(<span class="st">&quot;LDLIBS +=&quot;</span>, extra_ldlibs), <span class="at">collapse =</span> <span class="st">&quot; &quot;</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error: object &#39;extra_ldlibs&#39; not found</code></pre>
+</div>
 </div>
 <p>These will then be used to compile the model and external functions:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>mod <span class="ot">&lt;-</span> cmdstanr<span class="sc">::</span><span class="fu">cmdstan_model</span>(stan_file,</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>                               <span class="at">user_header =</span> user_hpp,</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                               <span class="at">stanc_options =</span> <span class="fu">list</span>(<span class="st">&quot;allow-undefined&quot;</span>),</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                               <span class="at">cpp_options =</span> cpp_options,</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                               <span class="at">force_recompile =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>mod <span class="ot">&lt;-</span> cmdstanr<span class="sc">::</span><span class="fu">cmdstan_model</span>(stan_file,</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                               <span class="at">user_header =</span> user_hpp,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                               <span class="at">stanc_options =</span> <span class="fu">list</span>(<span class="st">&quot;allow-undefined&quot;</span>),</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                               <span class="at">cpp_options =</span> cpp_options,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                               <span class="at">force_recompile =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
-<pre><code>Error: An error occured during compilation! See the message above for more information.</code></pre>
+<pre><code>Error: object &#39;cpp_options&#39; not found</code></pre>
 </div>
 </div>
 </section>
@@ -5162,19 +5167,19 @@ window.Quarto = {
 <h3 class="anchored" data-anchor-id="evaluation">Evaluation</h3>
 <p>To check our implementation, we’ll use the <code>$diagnose()</code> method to calculate the initial values and gradients for a model, and compare the results between the built-in <code>log_determinant()</code> and our implementation.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">N =</span> <span class="dv">10</span>, <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>), <span class="at">use_r =</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">N =</span> <span class="dv">10</span>, <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>), <span class="at">use_r =</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The built-in returns:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>r_model<span class="sc">$</span><span class="fu">diagnose</span>(<span class="at">data =</span> data, <span class="at">seed =</span> <span class="dv">2023</span>)<span class="sc">$</span><span class="fu">gradients</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>r_model<span class="sc">$</span><span class="fu">diagnose</span>(<span class="at">data =</span> data, <span class="at">seed =</span> <span class="dv">2023</span>)<span class="sc">$</span><span class="fu">gradients</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error: object &#39;r_model&#39; not found</code></pre>
 </div>
 </div>
 <p>And our implementation:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>use_r <span class="ot">&lt;-</span> <span class="dv">1</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>r_model<span class="sc">$</span><span class="fu">diagnose</span>(<span class="at">data =</span> data, <span class="at">seed =</span> <span class="dv">2023</span>)<span class="sc">$</span><span class="fu">gradients</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>use_r <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>r_model<span class="sc">$</span><span class="fu">diagnose</span>(<span class="at">data =</span> data, <span class="at">seed =</span> <span class="dv">2023</span>)<span class="sc">$</span><span class="fu">gradients</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error: object &#39;r_model&#39; not found</code></pre>
 </div>
@@ -5186,8 +5191,8 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="using-r-functions-without-analytic-gradients">Using R Functions without Analytic Gradients</h2>
 <p>In some cases, the analytic gradients for a given function might not always be known or easy to calculate. As a less-efficient alternative the gradients for a given function could also be computed numerically in R. For example, we could have calculated the gradients for our function using the <code>numDeriv::grad()</code> function:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode cc code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>RInstance<span class="op">.</span>parseEvalQ<span class="op">(</span><span class="st">&quot;detfun &lt;- function(x) { determinant(x, logarithm = TRUE)$modulus }&quot;</span><span class="op">);</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>Eigen<span class="op">::</span>MatrixXd log_det_grad <span class="op">=</span> RInstance<span class="op">.</span>parseEval<span class="op">(</span><span class="st">&quot;matrix(numDeriv::grad(detfun, m_val), nrow=nrow(m_val))&quot;</span><span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode cc code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>RInstance<span class="op">.</span>parseEvalQ<span class="op">(</span><span class="st">&quot;detfun &lt;- function(x) { determinant(x, logarithm = TRUE)$modulus }&quot;</span><span class="op">);</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>Eigen<span class="op">::</span>MatrixXd log_det_grad <span class="op">=</span> RInstance<span class="op">.</span>parseEval<span class="op">(</span><span class="st">&quot;matrix(numDeriv::grad(detfun, m_val), nrow=nrow(m_val))&quot;</span><span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 
