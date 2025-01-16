@@ -226,14 +226,15 @@ writeLines(stan_code, con = stan_file)
 To use this external C++ with Stan, we need to provide the additional compilation & linker flags for compiling against R, `RInside`, `Rcpp`, and `RcppEigen`. Both R and these packages provide methods for extracting these flags:
 
 ```{r}
-r_bin <- file.path(R.home("bin"), "R")
-
 extra_cxxflags <- c(
   paste0("CPPFLAGS += -I", shQuote(R.home("include"))),
   Rcpp:::RcppCxxFlags(),
   RcppEigen:::RcppEigenCxxFlags(),
   RInside:::RInsideCxxFlags()
 )
+
+# R library stored in different directory on windows
+libdir <- ifelse(.Platform$OS.type == "windows", R.home("bin"), R.home("lib"))
 
 extra_ldlibs <- c(
   paste0("LDLIBS += -L", shQuote(libdir), " -lR"),
