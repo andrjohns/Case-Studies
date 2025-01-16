@@ -268,14 +268,14 @@ data <- list(N = 10, y = c(0,1,0,0,0,0,0,0,0,1), use_r = 0)
 The built-in returns:
 
 ```{r}
-r_model$diagnose(data = data, seed = 2023)$gradients()
+mod$diagnose(data = data, seed = 2023)$gradients()
 ```
 
 And our implementation:
 
 ```{r}
 data$use_r <- 1
-r_model$diagnose(data = data, seed = 2023)$gradients()
+mod$diagnose(data = data, seed = 2023)$gradients()
 ```
 
 All looks good!
