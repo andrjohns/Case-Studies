@@ -5127,39 +5127,359 @@ window.Quarto = {
 <h3 class="anchored" data-anchor-id="compilation">Compilation</h3>
 <p>To use this external C++ with Stan, we need to provide the additional compilation &amp; linker flags for compiling against R, <code>RInside</code>, <code>Rcpp</code>, and <code>RcppEigen</code>. Both R and these packages provide methods for extracting these flags:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>r_bin <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="fu">R.home</span>(<span class="st">&quot;bin&quot;</span>), <span class="st">&quot;R&quot;</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>extra_cxxflags <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="st">&quot;CPPFLAGS += -I&quot;</span>, <span class="fu">shQuote</span>(<span class="fu">R.home</span>(<span class="st">&quot;include&quot;</span>))),</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  Rcpp<span class="sc">:::</span><span class="fu">RcppCxxFlags</span>(),</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  RcppEigen<span class="sc">:::</span><span class="fu">RcppEigenCxxFlags</span>(),</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  RInside<span class="sc">:::</span><span class="fu">RInsideCxxFlags</span>()</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>extra_ldlibs <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="st">&quot;LDLIBS += -L&quot;</span>, <span class="fu">shQuote</span>(libdir), <span class="st">&quot; -lR&quot;</span>),</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  RInside<span class="sc">:::</span><span class="fu">RInsideLdFlags</span>()</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-error">
-<pre><code>Error: object &#39;libdir&#39; not found</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cpp_options <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="fu">c</span>(<span class="st">&quot;CXXFLAGS +=&quot;</span>, extra_cxxflags), <span class="at">collapse =</span> <span class="st">&quot; &quot;</span>),</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="fu">c</span>(<span class="st">&quot;LDLIBS +=&quot;</span>, extra_ldlibs), <span class="at">collapse =</span> <span class="st">&quot; &quot;</span>)</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-error">
-<pre><code>Error: object &#39;extra_ldlibs&#39; not found</code></pre>
-</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>extra_cxxflags <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="st">&quot;CPPFLAGS += -I&quot;</span>, <span class="fu">shQuote</span>(<span class="fu">R.home</span>(<span class="st">&quot;include&quot;</span>))),</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  Rcpp<span class="sc">:::</span><span class="fu">RcppCxxFlags</span>(),</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  RcppEigen<span class="sc">:::</span><span class="fu">RcppEigenCxxFlags</span>(),</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  RInside<span class="sc">:::</span><span class="fu">RInsideCxxFlags</span>()</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># R library stored in different directory on windows</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>libdir <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(.Platform<span class="sc">$</span>OS.type <span class="sc">==</span> <span class="st">&quot;windows&quot;</span>, <span class="fu">R.home</span>(<span class="st">&quot;bin&quot;</span>), <span class="fu">R.home</span>(<span class="st">&quot;lib&quot;</span>))</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>extra_ldlibs <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="st">&quot;LDLIBS += -L&quot;</span>, <span class="fu">shQuote</span>(libdir), <span class="st">&quot; -lR&quot;</span>),</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  RInside<span class="sc">:::</span><span class="fu">RInsideLdFlags</span>()</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>cpp_options <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="fu">c</span>(<span class="st">&quot;CXXFLAGS +=&quot;</span>, extra_cxxflags), <span class="at">collapse =</span> <span class="st">&quot; &quot;</span>),</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="fu">c</span>(<span class="st">&quot;LDLIBS +=&quot;</span>, extra_ldlibs), <span class="at">collapse =</span> <span class="st">&quot; &quot;</span>)</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>These will then be used to compile the model and external functions:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>mod <span class="ot">&lt;-</span> cmdstanr<span class="sc">::</span><span class="fu">cmdstan_model</span>(stan_file,</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                               <span class="at">user_header =</span> user_hpp,</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                               <span class="at">stanc_options =</span> <span class="fu">list</span>(<span class="st">&quot;allow-undefined&quot;</span>),</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                               <span class="at">cpp_options =</span> cpp_options,</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                               <span class="at">force_recompile =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>mod <span class="ot">&lt;-</span> cmdstanr<span class="sc">::</span><span class="fu">cmdstan_model</span>(stan_file,</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>                               <span class="at">user_header =</span> user_hpp,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                               <span class="at">stanc_options =</span> <span class="fu">list</span>(<span class="st">&quot;allow-undefined&quot;</span>),</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                               <span class="at">cpp_options =</span> cpp_options,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                               <span class="at">force_recompile =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>In file included from stan/lib/stan_math/lib/boost_1.84.0/boost/numeric/ublas/traits.hpp:21,
+                 from stan/lib/stan_math/lib/boost_1.84.0/boost/numeric/ublas/storage.hpp:27,
+                 from stan/lib/stan_math/lib/boost_1.84.0/boost/numeric/ublas/vector.hpp:21,
+                 from stan/lib/stan_math/lib/boost_1.84.0/boost/numeric/odeint/util/ublas_wrapper.hpp:23,
+                 from stan/lib/stan_math/lib/boost_1.84.0/boost/numeric/odeint.hpp:25,
+                 from stan/lib/stan_math/stan/math/prim/functor/ode_rk45.hpp:9,
+                 from stan/lib/stan_math/stan/math/prim/functor/integrate_ode_rk45.hpp:6,
+                 from stan/lib/stan_math/stan/math/prim/functor.hpp:16,
+                 from stan/lib/stan_math/stan/math/rev/fun.hpp:189,
+                 from stan/lib/stan_math/stan/math/rev.hpp:14,
+                 from stan/lib/stan_math/stan/math.hpp:19,
+                 from /tmp/RtmpKRSiPe/file1bd265965017.hpp:2,
+                 from &lt;command-line&gt;:
+stan/lib/stan_math/lib/boost_1.84.0/boost/numeric/ublas/detail/iterator.hpp:111:21: warning: ‘template&lt;class _Category, class _Tp, class _Distance, class _Pointer, class _Reference&gt; struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  111 |         public std::iterator&lt;IC, T&gt; {
+      |                     ^~~~~~~~</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>In file included from /usr/include/c++/13/bits/stl_algobase.h:65,
+                 from /usr/include/c++/13/bits/specfun.h:43,
+                 from /usr/include/c++/13/cmath:3699,
+                 from /home/runner/work/_temp/Library/RcppEigen/include/Eigen/src/Core/util/Macros.h:679,
+                 from /home/runner/work/_temp/Library/RcppEigen/include/Eigen/Core:19,
+                 from /home/runner/work/_temp/Library/RcppEigen/include/Eigen/Dense:1,
+                 from stan/lib/stan_math/stan/math/prim/fun/Eigen.hpp:22,
+                 from stan/lib/stan_math/stan/math/rev.hpp:4:
+/usr/include/c++/13/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+stan/lib/stan_math/lib/boost_1.84.0/boost/numeric/ublas/detail/iterator.hpp:149:21: warning: ‘template&lt;class _Category, class _Tp, class _Distance, class _Pointer, class _Reference&gt; struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  149 |         public std::iterator&lt;IC, T&gt; {
+      |                     ^~~~~~~~
+/usr/include/c++/13/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+stan/lib/stan_math/lib/boost_1.84.0/boost/numeric/ublas/detail/iterator.hpp:204:21: warning: ‘template&lt;class _Category, class _Tp, class _Distance, class _Pointer, class _Reference&gt; struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  204 |         public std::iterator&lt;IC, T&gt; {
+      |                     ^~~~~~~~
+/usr/include/c++/13/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In member function ‘void file1bd2591fe737_model_namespace::file1bd2591fe737_model::write_array_impl(RNG&amp;, VecR&amp;, VecI&amp;, VecVar&amp;, bool, bool, std::ostream*) const’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:208: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;double, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt; &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  208 |       log_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:8: note: candidate: ‘double r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::MatrixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:15: note: candidate: ‘stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var, -1, -1&gt;&amp; m,
+      | </code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In instantiation of ‘stan::scalar_type_t&lt;T2&gt; file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob_impl(VecR&amp;, VecI&amp;, std::ostream*) const [with bool propto__ = false; bool jacobian__ = false; VecR = Eigen::Matrix&lt;double, -1, 1&gt;; VecI = Eigen::Matrix&lt;int, -1, 1&gt;; stan::require_vector_like_t&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_not_st_var&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::scalar_type_t&lt;T2&gt; = double; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:386:0:   required from ‘T_ file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob(Eigen::Matrix&lt;T_a, -1, 1&gt;&amp;, std::ostream*) const [with bool propto__ = false; bool jacobian__ = false; T_ = double; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:93:0:   required from ‘double stan::model::model_base_crtp&lt;M&gt;::log_prob(Eigen::VectorXd&amp;, std::ostream*) const [with M = file1bd2591fe737_model_namespace::file1bd2591fe737_model; Eigen::VectorXd = Eigen::Matrix&lt;double, -1, 1&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:91:0:   required from here
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:109: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;double, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt; &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  109 |       log_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:8: note: candidate: ‘double r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::MatrixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:15: note: candidate: ‘stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::mat</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>h::var, -1, -1&gt;&amp; m,
+      | </code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In instantiation of ‘stan::scalar_type_t&lt;T2&gt; file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob_impl(VecR&amp;, VecI&amp;, std::ostream*) const [with bool propto__ = false; bool jacobian__ = false; VecR = Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, 1&gt;; VecI = Eigen::Matrix&lt;int, -1, 1&gt;; stan::require_vector_like_t&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_st_var&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::scalar_type_t&lt;T2&gt; = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:386:0:   required from ‘T_ file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob(Eigen::Matrix&lt;T_a, -1, 1&gt;&amp;, std::ostream*) const [with bool propto__ = false; bool jacobian__ = false; T_ = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:98:0:   required from ‘stan::math::var stan::model::model_base_crtp&lt;M&gt;::log_prob(Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, 1&gt;&amp;, std::ostream*) const [with M = file1bd2591fe737_model_namespace::file1bd2591fe737_model; stan::math::var = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:96:0:   required from here
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:150: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt; &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  150 |       log_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:8: note: candidate: ‘double r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::MatrixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:15: note: candidate: ‘stan::math::var r_log_determinant(const Eigen::M</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>atrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var, -1, -1&gt;&amp; m,
+      | </code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In instantiation of ‘stan::scalar_type_t&lt;T2&gt; file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob_impl(VecR&amp;, VecI&amp;, std::ostream*) const [with bool propto__ = false; bool jacobian__ = true; VecR = Eigen::Matrix&lt;double, -1, 1&gt;; VecI = Eigen::Matrix&lt;int, -1, 1&gt;; stan::require_vector_like_t&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_not_st_var&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::scalar_type_t&lt;T2&gt; = double; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:386:0:   required from ‘T_ file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob(Eigen::Matrix&lt;T_a, -1, 1&gt;&amp;, std::ostream*) const [with bool propto__ = false; bool jacobian__ = true; T_ = double; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:104:0:   required from ‘double stan::model::model_base_crtp&lt;M&gt;::log_prob_jacobian(Eigen::VectorXd&amp;, std::ostream*) const [with M = file1bd2591fe737_model_namespace::file1bd2591fe737_model; Eigen::VectorXd = Eigen::Matrix&lt;double, -1, 1&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:102:0:   required from here
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:109: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;double, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt; &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  109 |       log_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:8: note: candidate: ‘double r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::MatrixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:15: note: candidate: ‘stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>stan::math::var, -1, -1&gt;&amp; m,
+      | 
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In instantiation of ‘stan::scalar_type_t&lt;T2&gt; file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob_impl(VecR&amp;, VecI&amp;, std::ostream*) const [with bool propto__ = false; bool jacobian__ = true; VecR = Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, 1&gt;; VecI = Eigen::Matrix&lt;int, -1, 1&gt;; stan::require_vector_like_t&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_st_var&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::scalar_type_t&lt;T2&gt; = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:386:0:   required from ‘T_ file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob(Eigen::Matrix&lt;T_a, -1, 1&gt;&amp;, std::ostream*) const [with bool propto__ = false; bool jacobian__ = true; T_ = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:109:0:   required from ‘stan::math::var stan::model::model_base_crtp&lt;M&gt;::log_prob_jacobian(Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, 1&gt;&amp;, std::ostream*) const [with M = file1bd2591fe737_model_namespace::file1bd2591fe737_model; stan::math::var = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:107:0:   required from here
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:150: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt; &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  150 |       log_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:8: note: candidate: ‘double r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::MatrixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:15: note: candidate: ‘s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>tan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var, -1, -1&gt;&amp; m,
+      | </code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In instantiation of ‘stan::scalar_type_t&lt;T2&gt; file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob_impl(VecR&amp;, VecI&amp;, std::ostream*) const [with bool propto__ = true; bool jacobian__ = false; VecR = Eigen::Matrix&lt;double, -1, 1&gt;; VecI = Eigen::Matrix&lt;int, -1, 1&gt;; stan::require_vector_like_t&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_not_st_var&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::scalar_type_t&lt;T2&gt; = double; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:386:0:   required from ‘T_ file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob(Eigen::Matrix&lt;T_a, -1, 1&gt;&amp;, std::ostream*) const [with bool propto__ = true; bool jacobian__ = false; T_ = double; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:115:0:   required from ‘double stan::model::model_base_crtp&lt;M&gt;::log_prob_propto(Eigen::VectorXd&amp;, std::ostream*) const [with M = file1bd2591fe737_model_namespace::file1bd2591fe737_model; Eigen::VectorXd = Eigen::Matrix&lt;double, -1, 1&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:113:0:   required from here
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:109: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;double, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt; &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  109 |       log_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:8: note: candidate: ‘double r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::MatrixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:15: note: candidate: ‘stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;st</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>an::math::var, -1, -1&gt;&amp; m,
+      | 
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In instantiation of ‘stan::scalar_type_t&lt;T2&gt; file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob_impl(VecR&amp;, VecI&amp;, std::ostream*) const [with bool propto__ = true; bool jacobian__ = false; VecR = Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, 1&gt;; VecI = Eigen::Matrix&lt;int, -1, 1&gt;; stan::require_vector_like_t&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_st_var&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::scalar_type_t&lt;T2&gt; = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:386:0:   required from ‘T_ file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob(Eigen::Matrix&lt;T_a, -1, 1&gt;&amp;, std::ostream*) const [with bool propto__ = true; bool jacobian__ = false; T_ = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:120:0:   required from ‘stan::math::var stan::model::model_base_crtp&lt;M&gt;::log_prob_propto(Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, 1&gt;&amp;, std::ostream*) const [with M = file1bd2591fe737_model_namespace::file1bd2591fe737_model; stan::math::var = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:118:0:   required from here
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:150: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt; &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  150 |       log_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:8: note: candidate: ‘double r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::MatrixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:15: note: candidate: ‘stan:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>:math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var, -1, -1&gt;&amp; m,
+      | 
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In instantiation of ‘stan::scalar_type_t&lt;T2&gt; file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob_impl(VecR&amp;, VecI&amp;, std::ostream*) const [with bool propto__ = true; bool jacobian__ = true; VecR = Eigen::Matrix&lt;double, -1, 1&gt;; VecI = Eigen::Matrix&lt;int, -1, 1&gt;; stan::require_vector_like_t&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_not_st_var&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::scalar_type_t&lt;T2&gt; = double; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:386:0:   required from ‘T_ file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob(Eigen::Matrix&lt;T_a, -1, 1&gt;&amp;, std::ostream*) const [with bool propto__ = true; bool jacobian__ = true; T_ = double; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:126:0:   required from ‘double stan::model::model_base_crtp&lt;M&gt;::log_prob_propto_jacobian(Eigen::VectorXd&amp;, std::ostream*) const [with M = file1bd2591fe737_model_namespace::file1bd2591fe737_model; Eigen::VectorXd = Eigen::Matrix&lt;double, -1, 1&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:124:0:   required from here
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:109: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;double, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt; &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  109 |       log_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:8: note: candidate: ‘double r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::MatrixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/RtmpKRSiPe/file1</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>bd265965017.hpp:15: note: candidate: ‘stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var, -1, -1&gt;&amp; m,
+      | 
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In instantiation of ‘stan::scalar_type_t&lt;T2&gt; file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob_impl(VecR&amp;, VecI&amp;, std::ostream*) const [with bool propto__ = true; bool jacobian__ = true; VecR = Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, 1&gt;; VecI = Eigen::Matrix&lt;int, -1, 1&gt;; stan::require_vector_like_t&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_st_var&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::scalar_type_t&lt;T2&gt; = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:386:0:   required from ‘T_ file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob(Eigen::Matrix&lt;T_a, -1, 1&gt;&amp;, std::ostream*) const [with bool propto__ = true; bool jacobian__ = true; T_ = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:132:0:   required from ‘stan::math::var stan::model::model_base_crtp&lt;M&gt;::log_prob_propto_jacobian(Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, 1&gt;&amp;, std::ostream*) const [with M = file1bd2591fe737_model_namespace::file1bd2591fe737_model; stan::math::var = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:129:0:   required from here
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:150: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt; &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  150 |       log_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:8: note: candidate: ‘doub</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>le r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::MatrixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:15: note: candidate: ‘stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var, -1, -1&gt;&amp; m,
+      | 
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In instantiation of ‘stan::scalar_type_t&lt;T2&gt; file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob_impl(VecR&amp;, VecI&amp;, std::ostream*) const [with bool propto__ = false; bool jacobian__ = false; VecR = std::vector&lt;double, std::allocator&lt;double&gt; &gt;; VecI = std::vector&lt;int&gt;; stan::require_vector_like_t&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_not_st_var&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::scalar_type_t&lt;T2&gt; = double; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:391:0:   required from ‘T_ file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob(std::vector&lt;U&gt;&amp;, std::vector&lt;int&gt;&amp;, std::ostream*) const [with bool propto__ = false; bool jacobian__ = false; T_ = double; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:156:0:   required from ‘double stan::model::model_base_crtp&lt;M&gt;::log_prob(std::vector&lt;double, std::allocator&lt;double&gt; &gt;&amp;, std::vector&lt;int&gt;&amp;, std::ostream*) const [with M = file1bd2591fe737_model_namespace::file1bd2591fe737_model; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:154:0:   required from here
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:109: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;double, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt; &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  109 |       log_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>file1bd265965017.hpp:8: note: candidate: ‘double r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::MatrixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:15: note: candidate: ‘stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var, -1, -1&gt;&amp; m,
+      | </code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In instantiation of ‘stan::scalar_type_t&lt;T2&gt; file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob_impl(VecR&amp;, VecI&amp;, std::ostream*) const [with bool propto__ = false; bool jacobian__ = false; VecR = std::vector&lt;stan::math::var_value&lt;double&gt;, std::allocator&lt;stan::math::var_value&lt;double&gt; &gt; &gt;; VecI = std::vector&lt;int&gt;; stan::require_vector_like_t&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_st_var&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::scalar_type_t&lt;T2&gt; = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:391:0:   required from ‘T_ file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob(std::vector&lt;U&gt;&amp;, std::vector&lt;int&gt;&amp;, std::ostream*) const [with bool propto__ = false; bool jacobian__ = false; T_ = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:162:0:   required from ‘stan::math::var stan::model::model_base_crtp&lt;M&gt;::log_prob(std::vector&lt;stan::math::var_value&lt;double&gt;, std::allocator&lt;stan::math::var_value&lt;double&gt; &gt; &gt;&amp;, std::vector&lt;int&gt;&amp;, std::ostream*) const [with M = file1bd2591fe737_model_namespace::file1bd2591fe737_model; stan::math::var = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:159:0:   required from here
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:150: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt; &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  150 |       log_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:8: note: candidate: ‘double r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::MatrixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/Rt</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>mpKRSiPe/file1bd265965017.hpp:15: note: candidate: ‘stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var, -1, -1&gt;&amp; m,
+      | 
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In instantiation of ‘stan::scalar_type_t&lt;T2&gt; file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob_impl(VecR&amp;, VecI&amp;, std::ostream*) const [with bool propto__ = false; bool jacobian__ = true; VecR = std::vector&lt;double, std::allocator&lt;double&gt; &gt;; VecI = std::vector&lt;int&gt;; stan::require_vector_like_t&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_not_st_var&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::scalar_type_t&lt;T2&gt; = double; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:391:0:   required from ‘T_ file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob(std::vector&lt;U&gt;&amp;, std::vector&lt;int&gt;&amp;, std::ostream*) const [with bool propto__ = false; bool jacobian__ = true; T_ = double; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:169:0:   required from ‘double stan::model::model_base_crtp&lt;M&gt;::log_prob_jacobian(std::vector&lt;double, std::allocator&lt;double&gt; &gt;&amp;, std::vector&lt;int&gt;&amp;, std::ostream*) const [with M = file1bd2591fe737_model_namespace::file1bd2591fe737_model; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:166:0:   required from here
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:109: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;double, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt; &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  109 |       log_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:8: note: candidate: ‘double r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::Mat</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>rixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:15: note: candidate: ‘stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var, -1, -1&gt;&amp; m,
+      | 
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In instantiation of ‘stan::scalar_type_t&lt;T2&gt; file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob_impl(VecR&amp;, VecI&amp;, std::ostream*) const [with bool propto__ = false; bool jacobian__ = true; VecR = std::vector&lt;stan::math::var_value&lt;double&gt;, std::allocator&lt;stan::math::var_value&lt;double&gt; &gt; &gt;; VecI = std::vector&lt;int&gt;; stan::require_vector_like_t&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_st_var&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::scalar_type_t&lt;T2&gt; = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:391:0:   required from ‘T_ file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob(std::vector&lt;U&gt;&amp;, std::vector&lt;int&gt;&amp;, std::ostream*) const [with bool propto__ = false; bool jacobian__ = true; T_ = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:175:0:   required from ‘stan::math::var stan::model::model_base_crtp&lt;M&gt;::log_prob_jacobian(std::vector&lt;stan::math::var_value&lt;double&gt;, std::allocator&lt;stan::math::var_value&lt;double&gt; &gt; &gt;&amp;, std::vector&lt;int&gt;&amp;, std::ostream*) const [with M = file1bd2591fe737_model_namespace::file1bd2591fe737_model; stan::math::var = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:172:0:   required from here
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:150: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt; &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  150 |       lo</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>g_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:8: note: candidate: ‘double r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::MatrixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:15: note: candidate: ‘stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var, -1, -1&gt;&amp; m,
+      | 
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In instantiation of ‘stan::scalar_type_t&lt;T2&gt; file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob_impl(VecR&amp;, VecI&amp;, std::ostream*) const [with bool propto__ = true; bool jacobian__ = false; VecR = std::vector&lt;double, std::allocator&lt;double&gt; &gt;; VecI = std::vector&lt;int&gt;; stan::require_vector_like_t&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_not_st_var&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::scalar_type_t&lt;T2&gt; = double; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:391:0:   required from ‘T_ file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob(std::vector&lt;U&gt;&amp;, std::vector&lt;int&gt;&amp;, std::ostream*) const [with bool propto__ = true; bool jacobian__ = false; T_ = double; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:182:0:   required from ‘double stan::model::model_base_crtp&lt;M&gt;::log_prob_propto(std::vector&lt;double, std::allocator&lt;double&gt; &gt;&amp;, std::vector&lt;int&gt;&amp;, std::ostream*) const [with M = file1bd2591fe737_model_namespace::file1bd2591fe737_model; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:179:0:   required from here
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:109: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;double, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code> &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  109 |       log_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:8: note: candidate: ‘double r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::MatrixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:15: note: candidate: ‘stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var, -1, -1&gt;&amp; m,
+      | 
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In instantiation of ‘stan::scalar_type_t&lt;T2&gt; file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob_impl(VecR&amp;, VecI&amp;, std::ostream*) const [with bool propto__ = true; bool jacobian__ = false; VecR = std::vector&lt;stan::math::var_value&lt;double&gt;, std::allocator&lt;stan::math::var_value&lt;double&gt; &gt; &gt;; VecI = std::vector&lt;int&gt;; stan::require_vector_like_t&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_st_var&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::scalar_type_t&lt;T2&gt; = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:391:0:   required from ‘T_ file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob(std::vector&lt;U&gt;&amp;, std::vector&lt;int&gt;&amp;, std::ostream*) const [with bool propto__ = true; bool jacobian__ = false; T_ = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:188:0:   required from ‘stan::math::var stan::model::model_base_crtp&lt;M&gt;::log_prob_propto(std::vector&lt;stan::math::var_value&lt;double&gt;, std::allocator&lt;stan::math::var_value&lt;double&gt; &gt; &gt;&amp;, std::vector&lt;int&gt;&amp;, std::ostream*) const [with M = file1bd2591fe737_model_namespace::file1bd2591fe737_model; stan::math::var = stan::math::var_value&lt;double&gt;; std::ostream = std::basi</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>c_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:185:0:   required from here
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:150: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt; &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  150 |       log_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:8: note: candidate: ‘double r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::MatrixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:15: note: candidate: ‘stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var, -1, -1&gt;&amp; m,
+      | 
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In instantiation of ‘stan::scalar_type_t&lt;T2&gt; file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob_impl(VecR&amp;, VecI&amp;, std::ostream*) const [with bool propto__ = true; bool jacobian__ = true; VecR = std::vector&lt;double, std::allocator&lt;double&gt; &gt;; VecI = std::vector&lt;int&gt;; stan::require_vector_like_t&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_not_st_var&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::scalar_type_t&lt;T2&gt; = double; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:391:0:   required from ‘T_ file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob(std::vector&lt;U&gt;&amp;, std::vector&lt;int&gt;&amp;, std::ostream*) const [with bool propto__ = true; bool jacobian__ = true; T_ = double; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:195:0:   required from ‘double stan::model::model_base_crtp&lt;M&gt;::log_prob_propto_jacobian(std::vector&lt;double, std::allocator&lt;double&gt; &gt;&amp;, std::vector&lt;int&gt;&amp;, std::ostream*) const [with M = f</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>ile1bd2591fe737_model_namespace::file1bd2591fe737_model; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:192:0:   required from here
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:109: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;double, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt; &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  109 |       log_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:8: note: candidate: ‘double r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::MatrixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:15: note: candidate: ‘stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var, -1, -1&gt;&amp; m,
+      | 
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp: In instantiation of ‘stan::scalar_type_t&lt;T2&gt; file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob_impl(VecR&amp;, VecI&amp;, std::ostream*) const [with bool propto__ = true; bool jacobian__ = true; VecR = std::vector&lt;stan::math::var_value&lt;double&gt;, std::allocator&lt;stan::math::var_value&lt;double&gt; &gt; &gt;; VecI = std::vector&lt;int&gt;; stan::require_vector_like_t&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_st_var&lt;VecR&gt;* &lt;anonymous&gt; = 0; stan::scalar_type_t&lt;T2&gt; = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:391:0:   required from ‘T_ file1bd2591fe737_model_namespace::file1bd2591fe737_model::log_prob(std::vector&lt;U&gt;&amp;, std::vector&lt;int&gt;&amp;, std::ostream*) const [with bool propto__ = true; bool jacobian__ = true; T_ = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:201:0:   required from ‘stan::math::var </code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>stan::model::model_base_crtp&lt;M&gt;::log_prob_propto_jacobian(std::vector&lt;stan::math::var_value&lt;double&gt;, std::allocator&lt;stan::math::var_value&lt;double&gt; &gt; &gt;&amp;, std::vector&lt;int&gt;&amp;, std::ostream*) const [with M = file1bd2591fe737_model_namespace::file1bd2591fe737_model; stan::math::var = stan::math::var_value&lt;double&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:198:0:   required from here
+/tmp/RtmpKRSiPe/model-1bd21984f856.hpp:150: error: call of overloaded ‘r_log_determinant(Eigen::Map&lt;const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;, 0, Eigen::Stride&lt;0, 0&gt; &gt;&amp;, std::ostream*&amp;)’ is ambiguous
+  150 |       log_det = (use_r ? r_log_determinant(matrix_par, pstream__) : stan::math::log_determinant(
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:8: note: candidate: ‘double r_log_determinant(const Eigen::MatrixXd&amp;, std::ostream*)’
+    8 | double r_log_determinant(const Eigen::MatrixXd&amp; m, std::ostream *pstream__) {
+      | 
+/tmp/RtmpKRSiPe/file1bd265965017.hpp:15: note: candidate: ‘stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var_value&lt;double&gt;, -1, -1&gt;&amp;, std::ostream*)’
+   15 | stan::math::var r_log_determinant(const Eigen::Matrix&lt;stan::math::var, -1, -1&gt;&amp; m,
+      | </code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>make: *** [make/program:77: /tmp/RtmpKRSiPe/model-1bd21984f856.o] Error 1</code></pre>
+</div>
 <div class="cell-output cell-output-error">
-<pre><code>Error: object &#39;cpp_options&#39; not found</code></pre>
+<pre><code>Error: An error occured during compilation! See the message above for more information.</code></pre>
 </div>
 </div>
 </section>
@@ -5167,21 +5487,21 @@ window.Quarto = {
 <h3 class="anchored" data-anchor-id="evaluation">Evaluation</h3>
 <p>To check our implementation, we’ll use the <code>$diagnose()</code> method to calculate the initial values and gradients for a model, and compare the results between the built-in <code>log_determinant()</code> and our implementation.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">N =</span> <span class="dv">10</span>, <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>), <span class="at">use_r =</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">N =</span> <span class="dv">10</span>, <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>), <span class="at">use_r =</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The built-in returns:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>r_model<span class="sc">$</span><span class="fu">diagnose</span>(<span class="at">data =</span> data, <span class="at">seed =</span> <span class="dv">2023</span>)<span class="sc">$</span><span class="fu">gradients</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>mod<span class="sc">$</span><span class="fu">diagnose</span>(<span class="at">data =</span> data, <span class="at">seed =</span> <span class="dv">2023</span>)<span class="sc">$</span><span class="fu">gradients</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
-<pre><code>Error: object &#39;r_model&#39; not found</code></pre>
+<pre><code>Error: object &#39;mod&#39; not found</code></pre>
 </div>
 </div>
 <p>And our implementation:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>use_r <span class="ot">&lt;-</span> <span class="dv">1</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>r_model<span class="sc">$</span><span class="fu">diagnose</span>(<span class="at">data =</span> data, <span class="at">seed =</span> <span class="dv">2023</span>)<span class="sc">$</span><span class="fu">gradients</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>use_r <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>mod<span class="sc">$</span><span class="fu">diagnose</span>(<span class="at">data =</span> data, <span class="at">seed =</span> <span class="dv">2023</span>)<span class="sc">$</span><span class="fu">gradients</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
-<pre><code>Error: object &#39;r_model&#39; not found</code></pre>
+<pre><code>Error: object &#39;mod&#39; not found</code></pre>
 </div>
 </div>
 <p>All looks good!</p>
@@ -5191,8 +5511,8 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="using-r-functions-without-analytic-gradients">Using R Functions without Analytic Gradients</h2>
 <p>In some cases, the analytic gradients for a given function might not always be known or easy to calculate. As a less-efficient alternative the gradients for a given function could also be computed numerically in R. For example, we could have calculated the gradients for our function using the <code>numDeriv::grad()</code> function:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode cc code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>RInstance<span class="op">.</span>parseEvalQ<span class="op">(</span><span class="st">&quot;detfun &lt;- function(x) { determinant(x, logarithm = TRUE)$modulus }&quot;</span><span class="op">);</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>Eigen<span class="op">::</span>MatrixXd log_det_grad <span class="op">=</span> RInstance<span class="op">.</span>parseEval<span class="op">(</span><span class="st">&quot;matrix(numDeriv::grad(detfun, m_val), nrow=nrow(m_val))&quot;</span><span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode cc code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>RInstance<span class="op">.</span>parseEvalQ<span class="op">(</span><span class="st">&quot;detfun &lt;- function(x) { determinant(x, logarithm = TRUE)$modulus }&quot;</span><span class="op">);</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>Eigen<span class="op">::</span>MatrixXd log_det_grad <span class="op">=</span> RInstance<span class="op">.</span>parseEval<span class="op">(</span><span class="st">&quot;matrix(numDeriv::grad(detfun, m_val), nrow=nrow(m_val))&quot;</span><span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 
