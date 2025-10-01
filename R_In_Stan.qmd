@@ -39,9 +39,9 @@ The process of interacting with R from C++ is greatly simplified by the `RInside
 
 However, a key detail that needs to be emphasised is that an R session can only be initialised *once* for a given program. This means that a single R session and its environment will be used for the entirety of the sampling/estimation process. Consequently, it should be considered best-practice to delete any variables/objects in the R session once they are no longer needed - otherwise you might be re-using objects/values from a previous iteration without realising.
 
-## C++: Working with Arithmetic Types
+## C++: 
 
-For simplicity, we’ll first implement the function without gradients (not compatible with parameters):
+Next, we need to specify the C++ for our function to use with both arithmetic and autodiff (i.e., parameters) types:
 
 ```{cc, eval=FALSE}
 /**
@@ -52,13 +52,22 @@ For simplicity, we’ll first implement the function without gradients (not comp
 #include <RInside.h>
 #include <RcppEigen.h>
 
+// If Stan detects R headers/environment it can cause issues for compilation
+// as it assumes the code is to be used by rstan
+#ifdef USING_R
+#undef USING_R
+#endif
+
 /**
  * The RInstance object is declared 'static' so that C++ knows not to delete
- * the object and invalidate the R session until the program has finished
+ * the object and invalidate the R session until the program has finished,
+ * it also ensures that the created session is specific to this program
+ * to avoid accessing other sessions (or having this session accessed by other processes)
 */
 static RInside RInstance;
 
-double r_log_determinant(const Eigen::MatrixXd& m, std::ostream *pstream__) {
+template <typename T, stan::require_st_arithmetic<T>* = nullptr>
+double r_log_determinant(const T& m, std::ostream *pstream__) {
   /**
    * Passing objects to R is very simple, as the conversion from C++ -> R types
    * is automatically delegated to Rcpp or similar (e.g., RcppEigen).
@@ -83,24 +92,17 @@ double r_log_determinant(const Eigen::MatrixXd& m, std::ostream *pstream__) {
 
   return log_det_val;
 }
-```
 
-As can be seen above, there is remarkably little extra code needed when passing data and results between R & C++.
-
-## C++: Working with Autodiff Types (Parameters)
-
-Next we can add the function definition for use with parameters.
-
-```{cc, eval=FALSE}
-stan::math::var r_log_determinant(const Eigen::Matrix<stan::math::var, -1, -1>& m,
+template <typename T, stan::require_st_var<T>* = nullptr>
+stan::math::var r_log_determinant(const T& m,
                                   std::ostream *pstream__) {
   using stan::arena_t;
   using stan::math::var;
   using stan::math::value_of;
 
   /**
-   * The parameters are moved into Stan's memory arena so that their gradients
-   * can be updated lated
+   * The parameters are moved into Stans memory arena so that their gradients
+   * can be updated in the reverse pass
   */
   arena_t<Eigen::Matrix<var, -1, -1>> arena_m = m;
 
@@ -115,55 +117,74 @@ stan::math::var r_log_determinant(const Eigen::Matrix<stan::math::var, -1, -1>& 
 
   /**
    * Also move the calculated gradients into the memory arena so we can access
-   * them later
+   * them in the reverse pass
   */
   arena_t<Eigen::MatrixXd> log_det_grad_arena = log_det_grad;
 
   /**
    * Initialise a new parameter with the calculated value, and specify how the
-   * gradients for the inputs should be updated later.
+   * gradients for the inputs should be updated in the reverse pass
   */
   var log_det = log_det_val;
   stan::math::reverse_pass_callback([arena_m, log_det, log_det_grad_arena]() mutable {
     arena_m.adj() += log_det.adj() * log_det_grad_arena;
   });
+
   return log_det;
 }
 ```
 
+
+
 ```{r, include=FALSE}
 header_code <- '
+
 #include <stan/math.hpp>
 #include <RInside.h>
 #include <RcppEigen.h>
 
+#ifdef USING_R
+#undef USING_R
+#endif
+
 static RInside RInstance;
 
-double r_log_determinant(const Eigen::MatrixXd& m, std::ostream *pstream__) {
+template <typename T, stan::require_st_arithmetic<T>* = nullptr>
+double r_log_determinant(const T& m, std::ostream *pstream__) {
+
   RInstance["m_val"] = m;
+
   double log_det_val = RInstance.parseEval("determinant(m_val, logarithm = TRUE)$modulus");
+
   RInstance.parseEvalQ("rm(m_val)");
+
   return log_det_val;
 }
 
-stan::math::var r_log_determinant(const Eigen::Matrix<stan::math::var, -1, -1>& m,
+template <typename T, stan::require_st_var<T>* = nullptr>
+stan::math::var r_log_determinant(const T& m,
                                   std::ostream *pstream__) {
   using stan::arena_t;
   using stan::math::var;
   using stan::math::value_of;
+
   arena_t<Eigen::Matrix<var, -1, -1>> arena_m = m;
 
   RInstance["m_val"] = stan::math::value_of(arena_m);
   double log_det_val = RInstance.parseEval("determinant(m_val, logarithm = TRUE)$modulus");
   Eigen::MatrixXd log_det_grad = RInstance.parseEval("t(solve(m_val))");
   RInstance.parseEvalQ("rm(m_val)");
+
   arena_t<Eigen::MatrixXd> log_det_grad_arena = log_det_grad;
+
   var log_det = log_det_val;
   stan::math::reverse_pass_callback([arena_m, log_det, log_det_grad_arena]() mutable {
     arena_m.adj() += log_det.adj() * log_det_grad_arena;
   });
+
   return log_det;
 }
+
 '
 user_hpp <- tempfile(fileext = ".hpp")
 writeLines(header_code, con = user_hpp)
@@ -227,7 +248,7 @@ To use this external C++ with Stan, we need to provide the additional compilatio
 
 ```{r}
 extra_cxxflags <- c(
-  paste0("CPPFLAGS += -I", shQuote(R.home("include"))),
+  paste0("-I", shQuote(R.home("include"))),
   Rcpp:::RcppCxxFlags(),
   RcppEigen:::RcppEigenCxxFlags(),
   RInside:::RInsideCxxFlags()
@@ -237,7 +258,7 @@ extra_cxxflags <- c(
 libdir <- ifelse(.Platform$OS.type == "windows", R.home("bin"), R.home("lib"))
 
 extra_ldlibs <- c(
-  paste0("LDLIBS += -L", shQuote(libdir), " -lR"),
+  paste0("-L", shQuote(libdir), " -lR"),
   RInside:::RInsideLdFlags()
 )
 
@@ -252,7 +273,6 @@ These will then be used to compile the model and external functions:
 ```{r}
 mod <- cmdstanr::cmdstan_model(stan_file,
                                user_header = user_hpp,
-                               stanc_options = list("allow-undefined"),
                                cpp_options = cpp_options,
                                force_recompile = TRUE)
 ```
