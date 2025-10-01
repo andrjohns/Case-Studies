@@ -4208,50 +4208,53 @@ window.Quarto = {
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>mod <span class="ot">&lt;-</span> cmdstanr<span class="sc">::</span><span class="fu">cmdstan_model</span>(stan_file,</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>                               <span class="at">user_header =</span> user_hpp,</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                               <span class="at">stanc_options =</span> <span class="fu">list</span>(<span class="st">&quot;allow-undefined&quot;</span>),</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                               <span class="at">cpp_options =</span> cpp_options,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>                               <span class="at">force_recompile =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>stanc: option &#39;--allow-undefined&#39; cannot be repeated
-Usage: stanc [OPTION]… [MODEL_FILE]
-Try &#39;stanc --help&#39; for more information.</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>make: *** [make/program:66: /tmp/RtmpOBGpCq/model-1ff51ba16855.hpp] Error 124</code></pre>
-</div>
-<div class="cell-output cell-output-error">
-<pre><code>Error: An error occured during compilation! See the message above for more information.</code></pre>
-</div>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                               <span class="at">cpp_options =</span> cpp_options,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                               <span class="at">force_recompile =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="stan---validation" class="level3">
 <h3 class="anchored" data-anchor-id="stan---validation">Stan - Validation</h3>
 <p>To test our implementation, we can fit the model for a small number of iterations and check that the calculated quantiles are consistent with those returned by <code>qnorm()</code> in R directly, which shows that the values match completely.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> mod<span class="sc">$</span><span class="fu">sample</span>(<span class="at">data =</span> <span class="fu">list</span>(<span class="at">use_normal =</span> <span class="dv">0</span>), <span class="at">chains =</span> <span class="dv">1</span>,</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>                      <span class="at">iter_warmup =</span> <span class="dv">50</span>, <span class="at">iter_sampling =</span> <span class="dv">50</span>,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                      <span class="at">show_messages =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                      <span class="at">show_exceptions =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-error">
-<pre><code>Error: object &#39;mod&#39; not found</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> mod<span class="sc">$</span><span class="fu">sample</span>(<span class="at">data =</span> <span class="fu">list</span>(<span class="at">use_normal =</span> <span class="dv">0</span>), <span class="at">chains =</span> <span class="dv">1</span>,</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>                      <span class="at">iter_warmup =</span> <span class="dv">50</span>, <span class="at">iter_sampling =</span> <span class="dv">50</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                      <span class="at">show_messages =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                      <span class="at">show_exceptions =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: 6 of 50 (12.0%) transitions ended with a divergence.
+See https://mc-stan.org/misc/warnings for details.</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>fit<span class="sc">$</span><span class="fu">draws</span>(<span class="at">variables =</span> <span class="fu">c</span>(<span class="st">&quot;log_p&quot;</span>, <span class="st">&quot;qnorm_test&quot;</span>, <span class="st">&quot;qt_test&quot;</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    posterior<span class="sc">::</span><span class="fu">mutate_variables</span>(<span class="at">qnorm_true =</span> <span class="fu">qnorm</span>(log_p, <span class="at">log.p=</span><span class="cn">TRUE</span>),</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>                                <span class="at">qt_true =</span> <span class="fu">qt</span>(log_p, <span class="at">df =</span> <span class="dv">3</span>, <span class="at">log.p=</span><span class="cn">TRUE</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    posterior<span class="sc">::</span><span class="fu">summarise_draws</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-error">
-<pre><code>Error: object &#39;fit&#39; not found</code></pre>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: 1 of 1 chains had an E-BFMI less than 0.3.
+See https://mc-stan.org/misc/warnings for details.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>fit<span class="sc">$</span><span class="fu">draws</span>(<span class="at">variables =</span> <span class="fu">c</span>(<span class="st">&quot;log_p&quot;</span>, <span class="st">&quot;qnorm_test&quot;</span>, <span class="st">&quot;qt_test&quot;</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    posterior<span class="sc">::</span><span class="fu">mutate_variables</span>(<span class="at">qnorm_true =</span> <span class="fu">qnorm</span>(log_p, <span class="at">log.p=</span><span class="cn">TRUE</span>),</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                                <span class="at">qt_true =</span> <span class="fu">qt</span>(log_p, <span class="at">df =</span> <span class="dv">3</span>, <span class="at">log.p=</span><span class="cn">TRUE</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    posterior<span class="sc">::</span><span class="fu">summarise_draws</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 10
+  variable       mean   median         sd   mad       q5      q95  rhat ess_bulk
+  &lt;chr&gt;         &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;
+1 log_p      -2.74e-8 -1.46e-8    2.46e-8     0 -7.61e-8 -1.46e-8  1.46     2.27
+2 qnorm_test  5.48e+0  5.55e+0    1.14e-1     0  5.25e+0  5.55e+0  1.46     2.27
+3 qt_test     3.80e+2  4.23e+2    7.00e+1     0  2.44e+2  4.23e+2  1.46     2.27
+4 qnorm_true  5.48e+0  5.55e+0    1.14e-1     0  5.25e+0  5.55e+0  1.46     2.27
+5 qt_true     3.80e+2  4.23e+2    7.00e+1     0  2.44e+2  4.23e+2  1.46     2.27
+# ℹ 1 more variable: ess_tail &lt;dbl&gt;</code></pre>
 </div>
 </div>
 <p>Next, to validate the specification of gradients, we can use <code>cmdstanr</code>’s <code>$diagnose()</code> method to check that our gradient calculations match those from finite-differencing, which also shows a great match:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>mod<span class="sc">$</span><span class="fu">diagnose</span>(<span class="at">data =</span> <span class="fu">list</span>(<span class="at">use_normal =</span> <span class="dv">1</span>))<span class="sc">$</span><span class="fu">gradients</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-error">
-<pre><code>Error: object &#39;mod&#39; not found</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>mod<span class="sc">$</span><span class="fu">diagnose</span>(<span class="at">data =</span> <span class="fu">list</span>(<span class="at">use_normal =</span> <span class="dv">1</span>))<span class="sc">$</span><span class="fu">gradients</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  param_idx    value   model finite_diff        error
+1         0 -1.32329 0.33415     0.33415 -5.01224e-11</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>mod<span class="sc">$</span><span class="fu">diagnose</span>(<span class="at">data =</span> <span class="fu">list</span>(<span class="at">use_normal =</span> <span class="dv">0</span>))<span class="sc">$</span><span class="fu">gradients</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-error">
-<pre><code>Error: object &#39;mod&#39; not found</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>mod<span class="sc">$</span><span class="fu">diagnose</span>(<span class="at">data =</span> <span class="fu">list</span>(<span class="at">use_normal =</span> <span class="dv">0</span>))<span class="sc">$</span><span class="fu">gradients</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  param_idx   value    model finite_diff        error
+1         0 1.68738 -10.6368    -10.6368 -4.76769e-10</code></pre>
 </div>
 </div>
 
