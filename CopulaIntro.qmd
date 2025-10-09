@@ -1244,7 +1244,7 @@ Next, we'll estimate the exact LOO-CV for each observation. Given the number of 
 future::plan(future::multisession)
 
 run_fun <- function(idx) {
-  copula_mod <- cmdstanr::cmdstan_model(exe_file = "copula_mod_loo")
+  copula_mod <- cmdstanr::cmdstan_model(exe_file = copula_mod_loo$exe_file())
   copula_fit_iter <- copula_mod$sample(
     data = list(N = nrow(y), Y = y, y_miss_i = idx)
   )
