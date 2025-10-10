@@ -1262,6 +1262,15 @@ log_mean_exp <- function(x) {
   max_x + log(sum(exp(x - max_x))) - log(length(x))
 }
 exact_elpds <- apply(exact_lpd, 2, log_mean_exp)
+
+future::plan(future::sequential)
+```
+
+```{r, include=FALSE}
+if ("exact_elpds" %in% ls()) {
+  # Save for future processing
+  saveRDS("exact_elpds.rds")
+}
 ```
 
 ```{r, include=FALSE}
@@ -1292,6 +1301,7 @@ data.frame(loo_elpd = approx_loo$pointwise[,1],
 
 We can see that the exact and approximate LOO-CV estimates are extremely consistent.
 
+<!--
 #### Student-T Copula
 
 We can use the same approach for Student-T Copulas, following the pointwise factorisation given by Buerkner, Gabry, and Vehtari (2020).
@@ -1345,90 +1355,3 @@ $$
 
 We can then use the PSIS algorithm implemented in the `loo` package to approximate $p(y_i | y_{-i})$.
 
-##### Exact LOO-CV for Student-T Copula
-
-The assessment of exact LOO-CV follows the same method as for the Gaussian Copula.
-
-##### Stan Model
-
-```{cmdstan, output.var="copula_student_mod"}
-functions {
-  real student_t_quantile(real p, data real df) {
-    real probability = (p > 0.5) ? 1 - p : p;
-    real x = inv_inc_beta(0.5 * df, 0.5, 2 * probability);
-    real t = sqrt(df * (1 - x)/x);
-    return (p > 0.5) ? t : -t;
-  }
-
-  real student_t_copula_cholesky_lpdf(matrix u, data real df, matrix L) {
-    array[rows(u)] row_vector[cols(u)] q;
-    for (n in 1:rows(u)) {
-      for (j in 1:cols(u)) {
-        q[n][j] = student_t_quantile(u[n, j], df);
-      }
-    }
-
-    return multi_student_t_cholesky_lpdf(q | df, rep_row_vector(0, cols(L)), L)
-            - student_t_lpdf(to_vector(to_matrix(q)) | df, 0, 1);
-  }
-
-  array[] int subset_indices(int skip_ind, int J) {
-    if (skip_ind == 1) {
-      return linspaced_int_array(J - 1, 2, J);
-    } else if (skip_ind == J) {
-      return linspaced_int_array(J - 1, 1, J - 1);
-    }
-    array[skip_ind - 1] int indices_bef = linspaced_int_array(skip_ind - 1, 1, skip_ind - 1);
-    return append_array(linspaced_int_array(skip_ind - 1, 1, skip_ind - 1),
-                        linspaced_int_array(J - skip_ind, skip_ind + 1, J));
-}
-
-data {
-  int<lower=0> N;
-  matrix[N, 2] Y;
-  real<lower=0> df;
-}
-
-parameters {
-  real<lower=0> lambda;
-  real<lower=0> nu;
-  cholesky_factor_corr[2] rho_chol;
-}
-
-model {
-  matrix[N, 2] u;
-
-  for (n in 1:N) {
-    u[n, 1] = exponential_cdf(Y[n, 1] | lambda);
-    u[n, 2] = chi_square_cdf(Y[n, 2] | nu);
-  }
-
-  Y[, 1] ~ exponential(lambda);
-  Y[, 2] ~ chi_square(nu);
-
-  u ~ student_t_copula_cholesky(df, rho_chol);
-}
-
-generated quantities {
-  real rho = multiply_lower_tri_self_transpose(rho_chol)[1, 2];
-  matrix[2, 2] Sigma_inv = chol2inv(rho_chol);
-  {
-    matrix[N, 2] q;
-
-    for (n in 1:N) {
-      q[n, 1] = student_t_quantile(exponential_cdf(Y[n, 1] | lambda), df);
-      q[n, 2] = student_t_quantile(chi_square_cdf(Y[n, 2] | nu), df);
-    }
-    matrix[N, 2] g = q * Sigma_inv;
-  }
-}
-```
-
-```{r, eval=FALSE}
-copula_student_mod <- cmdstan_model("copula_student.stan")
-```
-
-```{r, warning=FALSE, results=FALSE, message=FALSE}
-copula_student_fit <- copula_student_mod$sample(data = list(N = nrow(y), Y = y, df = 5),
-                                parallel_chains = 4)
-```
