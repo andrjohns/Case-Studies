@@ -32,7 +32,26 @@ jobs:
           use-public-rspm: true
           extra-repositories: 'https://stan-dev.r-universe.dev https://andrjohns.r-universe.dev'
 
-      - uses: r-lib/actions/setup-renv@v2
+      - name: Install R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::rmarkdown
+            any::knitr
+            any::cmdstanr
+            any::StanEstimators
+            any::randcorr
+            any::sn
+            any::mvtnorm
+            any::Rcpp
+            any::RcppEigen
+            any::RInside
+            any::RTMB
+            any::withr
+            any::callr
+            any::future
+            any::bayesplot
+            any::loo
 
       - name: Cache CmdStan
         id: cache-cmdstan

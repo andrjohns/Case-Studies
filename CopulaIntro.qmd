@@ -184,7 +184,7 @@ ll_function <- function(parameters, data_y) {
 
   adjustments <- sum(parameters[1:2]) + log1p(-(rho*rho))
 
-  marginal_log_lik <- sum(dexp(data_y[,1], rate = lambda, log = TRUE)) #+
+  marginal_log_lik <- sum(dexp(data_y[,1], rate = lambda, log = TRUE)) +
                       sum(dchisq(data_y[,2], df = nu, log = TRUE))
 
   # Apply marginal CDFs to data
@@ -196,7 +196,7 @@ ll_function <- function(parameters, data_y) {
 
   # Map uniform variates to normal scores
   q <- qnorm(u)
-  dim(q) <- c(nrow(u), ncol(u))
+  dim(q) <- c(nrow(data_y), ncol(data_y))
   Sigma <- matrix(c(1, rho, rho, 1), nrow = 2)
   copula_log_lik <- sum(RTMB::dmvnorm(q, Sigma = Sigma, log = TRUE)) - sum(dnorm(q, log = TRUE))
 
