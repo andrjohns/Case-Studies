@@ -260,7 +260,7 @@ This will allow us to use algorithms implemented by Stan to estimate parameters 
 sampling_time <- system.time({
   results_stan <- stan_sample(fn = ll_function,
                               par_inits = c(0,0,0),
-                              grad_fun = "RTMB"
+                              grad_fun = "RTMB",
                               additional_args = list(data_y = y),
                               parallel_chains = 4,
                               quiet = TRUE)
