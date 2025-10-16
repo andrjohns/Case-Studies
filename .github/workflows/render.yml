@@ -50,6 +50,8 @@ jobs:
             any::withr
             any::callr
             any::future
+            any::bayesplot
+            any::loo
 
       - name: Cache CmdStan
         id: cache-cmdstan
