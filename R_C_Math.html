@@ -4241,13 +4241,13 @@ See https://mc-stan.org/misc/warnings for details.</code></pre>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    posterior<span class="sc">::</span><span class="fu">summarise_draws</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 5 × 10
-  variable         mean    median      sd   mad       q5      q95  rhat ess_bulk
-  &lt;chr&gt;           &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;
-1 log_p      -0.0000167  -6.45e-6 2.01e-5     0 -6.48e-5 -6.45e-6  2.55     1.46
-2 qnorm_test  4.23        4.36e+0 1.72e-1     0  3.83e+0  4.36e+0  2.55     1.46
-3 qt_test    46.7         5.55e+1 1.01e+1     0  2.57e+1  5.55e+1  2.55     1.46
-4 qnorm_true  4.23        4.36e+0 1.72e-1     0  3.83e+0  4.36e+0  2.55     1.46
-5 qt_true    46.7         5.55e+1 1.01e+1     0  2.57e+1  5.55e+1  2.55     1.46
+  variable       mean   median       sd     mad       q5      q95  rhat ess_bulk
+  &lt;chr&gt;         &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;
+1 log_p      -7.78e-8 -4.76e-8  6.01e-8 1.34e-8 -2.17e-7 -3.85e-8  2.79     1.42
+2 qnorm_test  5.28e+0  5.34e+0  1.10e-1 5.18e-2  5.05e+0  5.37e+0  2.79     1.42
+3 qt_test     2.64e+2  2.87e+2  4.79e+1 2.73e+1  1.72e+2  3.06e+2  2.79     1.42
+4 qnorm_true  5.28e+0  5.34e+0  1.10e-1 5.18e-2  5.05e+0  5.37e+0  2.79     1.42
+5 qt_true     2.64e+2  2.87e+2  4.79e+1 2.73e+1  1.72e+2  3.06e+2  2.79     1.42
 # ℹ 1 more variable: ess_tail &lt;dbl&gt;</code></pre>
 </div>
 </div>
@@ -4255,13 +4255,13 @@ See https://mc-stan.org/misc/warnings for details.</code></pre>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>mod<span class="sc">$</span><span class="fu">diagnose</span>(<span class="at">data =</span> <span class="fu">list</span>(<span class="at">use_normal =</span> <span class="dv">1</span>))<span class="sc">$</span><span class="fu">gradients</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  param_idx   value     model finite_diff        error
-1         0 1.49218 -0.703046   -0.703046 -4.99989e-10</code></pre>
+<pre><code>  param_idx  value     model finite_diff       error
+1         0 1.2461 -0.540771   -0.540771 4.72193e-11</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>mod<span class="sc">$</span><span class="fu">diagnose</span>(<span class="at">data =</span> <span class="fu">list</span>(<span class="at">use_normal =</span> <span class="dv">0</span>))<span class="sc">$</span><span class="fu">gradients</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  param_idx   value    model finite_diff        error
-1         0 1.89317 -20.2027    -20.2027 -2.87688e-09</code></pre>
+<pre><code>  param_idx    value    model finite_diff       error
+1         0 -1.37989 0.159573    0.159573 1.20318e-10</code></pre>
 </div>
 </div>
 
