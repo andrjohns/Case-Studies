@@ -178,7 +178,7 @@ First, we will define a function to calculate the gaussian copula density for a 
 dgauss_copula <- function(u, gamma, log = TRUE) {
   # Map uniform variates to normal scores
   q <- qnorm(u)
-  ll <- sum(mvtnorm::dmvnorm(q, sigma = gamma, log = TRUE)) - sum(dnorm(q, log = TRUE))
+  ll <- sum(RTMB::dmvnorm(q, Sigma = gamma, log = TRUE)) - sum(dnorm(q, log = TRUE))
   ifelse(isTRUE(log), ll, exp(ll))
 }
 ```
@@ -260,6 +260,7 @@ This will allow us to use algorithms implemented by Stan to estimate parameters 
 sampling_time <- system.time({
   results_stan <- stan_sample(fn = ll_function,
                               par_inits = c(0,0,0),
+                              grad_fun = "RTMB"
                               additional_args = list(data_y = y),
                               parallel_chains = 4,
                               quiet = TRUE)
@@ -287,6 +288,7 @@ One alternative, before moving to using a Stan model directly, is to use the [Pa
 path_time <- system.time({
   results_path <- stan_pathfinder(fn = ll_function,
                                   par_inits = c(0,0,0),
+                                  grad_fun = "RTMB",
                                   additional_args = list(data_y = y),
                                   quiet = TRUE,
                             # Return same number of approximate draws as sampling
