@@ -46,6 +46,10 @@ jobs:
             any::Rcpp
             any::RcppEigen
             any::RInside
+            any::RTMB
+            any::withr
+            any::callr
+            any::future
 
       - name: Cache CmdStan
         id: cache-cmdstan
