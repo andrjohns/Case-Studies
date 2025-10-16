@@ -175,16 +175,6 @@ To estimate these parameters via maximum-likelihood in R, we need to define a fu
 First, we will define a function to calculate the gaussian copula density for a given set of uniform variates $u$ and correlation matrix $\Gamma$:
 
 ```{r}
-dgauss_copula <- function(u, gamma, log = TRUE) {
-  # Map uniform variates to normal scores
-  q <- qnorm(u)
-  dim(q) <- dim(u)
-  ll <- sum(RTMB::dmvnorm(q, Sigma = gamma, log = TRUE)) - sum(dnorm(q, log = TRUE))
-  ifelse(isTRUE(log), ll, exp(ll))
-}
-```
-
-```{r}
 # Define the log-likelihood function
 ll_function <- function(parameters, data_y) {
   # Constrain input parameters to valid values for distributions
@@ -201,10 +191,14 @@ ll_function <- function(parameters, data_y) {
   u <- data_y
   u[,1] <- pexp(data_y[,1], rate = lambda)
   u[,2] <- pchisq(data_y[,2], df = nu)
-  dim(u) <- dim(data_y)
+  dim(u) <- c(nrow(data_y), ncol(data_y))
 
-  copula_log_lik <- dgauss_copula(u, matrix(c(1, rho, rho, 1), nrow = 2),
-                                  log = TRUE)
+
+  # Map uniform variates to normal scores
+  q <- qnorm(u)
+  dim(q) <- c(nrow(u), ncol(u))
+  Sigma <- matrix(c(1, rho, rho, 1), nrow = 2)
+  copula_log_lik <- sum(RTMB::dmvnorm(q, Sigma = Sigma, log = TRUE)) - sum(dnorm(q, log = TRUE))
 
   # Return joint log-likelihood with adjustments for change-of-variables
   marginal_log_lik + copula_log_lik + adjustments
@@ -265,7 +259,7 @@ sampling_time <- system.time({
                               grad_fun = "RTMB",
                               additional_args = list(data_y = y),
                               parallel_chains = 4,
-                              quiet = TRUE)
+                              quiet = FALSE)
 })
 ```
 
