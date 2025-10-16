@@ -4228,7 +4228,7 @@ window.Quarto = {
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                      <span class="at">show_messages =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                      <span class="at">show_exceptions =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: 11 of 50 (22.0%) transitions ended with a divergence.
+<pre><code>Warning: 6 of 50 (12.0%) transitions ended with a divergence.
 See https://mc-stan.org/misc/warnings for details.</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
@@ -4241,13 +4241,13 @@ See https://mc-stan.org/misc/warnings for details.</code></pre>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    posterior<span class="sc">::</span><span class="fu">summarise_draws</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 5 × 10
-  variable          mean   median      sd   mad       q5      q95  rhat ess_bulk
-  &lt;chr&gt;            &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;
-1 log_p      -0.00000782 -3.82e-6 1.05e-5     0 -3.43e-5 -3.82e-6  1.41     2.47
-2 qnorm_test  4.40        4.47e+0 1.57e-1     0  3.98e+0  4.47e+0  1.41     2.47
-3 qt_test    60.4         6.60e+1 1.10e+1     0  3.18e+1  6.60e+1  1.41     2.47
-4 qnorm_true  4.40        4.47e+0 1.57e-1     0  3.98e+0  4.47e+0  1.41     2.47
-5 qt_true    60.4         6.60e+1 1.10e+1     0  3.18e+1  6.60e+1  1.41     2.47
+  variable       mean   median      sd     mad       q5      q95  rhat ess_bulk
+  &lt;chr&gt;         &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;
+1 log_p      -1.09e-8 -6.80e-9 1.19e-8 3.36e-9 -4.05e-8 -2.47e-9  2.07     1.60
+2 qnorm_test  5.66e+0  5.68e+0 1.36e-1 1.02e-1  5.37e+0  5.85e+0  2.07     1.60
+3 qt_test     5.44e+2  5.45e+2 1.26e+2 1.17e+2  3.01e+2  7.64e+2  2.07     1.60
+4 qnorm_true  5.66e+0  5.68e+0 1.36e-1 1.02e-1  5.37e+0  5.85e+0  2.07     1.60
+5 qt_true     5.44e+2  5.45e+2 1.26e+2 1.17e+2  3.01e+2  7.64e+2  2.07     1.60
 # ℹ 1 more variable: ess_tail &lt;dbl&gt;</code></pre>
 </div>
 </div>
@@ -4255,13 +4255,13 @@ See https://mc-stan.org/misc/warnings for details.</code></pre>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>mod<span class="sc">$</span><span class="fu">diagnose</span>(<span class="at">data =</span> <span class="fu">list</span>(<span class="at">use_normal =</span> <span class="dv">1</span>))<span class="sc">$</span><span class="fu">gradients</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  param_idx    value     model finite_diff        error
-1         0 0.401925 -0.119875   -0.119875 -7.19644e-11</code></pre>
+<pre><code>  param_idx   value     model finite_diff       error
+1         0 1.23953 -0.536723   -0.536723 5.29754e-11</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>mod<span class="sc">$</span><span class="fu">diagnose</span>(<span class="at">data =</span> <span class="fu">list</span>(<span class="at">use_normal =</span> <span class="dv">0</span>))<span class="sc">$</span><span class="fu">gradients</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  param_idx   value    model finite_diff        error
-1         0 1.32816 -4.02799    -4.02799 -3.67833e-10</code></pre>
+<pre><code>  param_idx     value     model finite_diff     error
+1         0 -0.495282 0.0900275   0.0900275 4.392e-11</code></pre>
 </div>
 </div>
 
