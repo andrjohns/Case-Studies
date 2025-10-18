@@ -249,6 +249,10 @@ library(StanEstimators)
 suppressPackageStartupMessages(library(posterior))
 ```
 
+```{r include=FALSE}
+ll_function <- eval(parse(text = deparse(ll_function)))
+```
+
 This will allow us to use algorithms implemented by Stan to estimate parameters for arbitrary R functions. To use full Bayesian sampling with the No-U-Turn Sampler (NUTS) algorithm, we can use the `stan_sample()` function:
 
 ```{r, warning=FALSE, results=FALSE, message=FALSE}
